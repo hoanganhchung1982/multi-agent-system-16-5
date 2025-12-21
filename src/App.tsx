@@ -10,7 +10,7 @@ import {
   fetchTTSAudio, 
   playStoredAudio, 
   generateSummary 
-} from '../services/geminiService.ts';
+} from '../services/geminiService';
 
 // Bỏ NotebookLM khỏi AgentLogo
 const AgentLogo = React.memo(({ type, active }: { type: AgentType, active: boolean }) => {

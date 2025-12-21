@@ -9,9 +9,7 @@ export enum Subject {
 export enum AgentType {
   SPEED = 'Speed',
   SOCRATIC = 'Socratic',
-  NOTEBOOK = 'NotebookLM',
   PERPLEXITY = 'Perplexity',
-  // CASIO = 'Casio 580' // Đã bị xóa
 }
 
 export interface QuizQuestion {

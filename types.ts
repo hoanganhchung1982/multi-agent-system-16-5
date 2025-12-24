@@ -7,9 +7,9 @@ export enum Subject {
 }
 
 export enum AgentType {
-  SPEED = 'Speed',
-  SOCRATIC = 'Socratic',
-  PERPLEXITY = 'Perplexity',
+  SPEED = 'Professor 1',
+  SOCRATIC = 'Professor 2',
+  PERPLEXITY = 'Professor 3',
 }
 
 export interface QuizQuestion {

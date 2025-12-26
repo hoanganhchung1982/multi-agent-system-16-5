@@ -70,7 +70,7 @@ const useAgentSystem = (selectedSubject: Subject | null) => {
            generateSummary(res).then(sum => sum && fetchTTSAudio(sum).then(aud => aud && setAllAudios(p => ({...p, [agent]: aud}))));
         }
       } catch (error) {
-        setAllResults(prev => ({ ...prev, [agent]: "Chuyên gia đang bận, vui lòng thử lại." }));
+        setAllResults(prev => ({ ...prev, [agent]: "Các chuyên gia đang trao đổi, xử lý dữ liệu" }));
       }
     };
 

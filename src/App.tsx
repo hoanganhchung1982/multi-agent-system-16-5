@@ -63,7 +63,7 @@ const useAgentSystem = (selectedSubject: Subject | null) => {
             generateSummary(parsed.finalAnswer).then(sum => sum && fetchTTSAudio(sum).then(aud => aud && setAllAudios(p => ({...p, [agent]: aud}))));
           } catch (e) {
             console.error("JSON Parse Error", e);
-             setAllResults(prev => ({ ...prev, [agent]: "Lỗi định dạng dữ liệu từ chuyên gia Speed." }));
+             setAllResults(prev => ({ ...prev, [agent]: "Hãy tải lại dữ liệu cho chuyên gia" }));
           }
         } else {
            // Other agents

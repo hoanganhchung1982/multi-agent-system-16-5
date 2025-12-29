@@ -35,7 +35,8 @@ export default async function (req: Request) {
     ];
 
     // 3. Gọi API của Google Gemini
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+ const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });                     
+ {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -66,4 +67,5 @@ export default async function (req: Request) {
     console.error("Lỗi Server:", err);
     return new Response(JSON.stringify({ error: 'Lỗi máy chủ khi xử lý Gemini' }), { status: 500 });
   }
+
 }

@@ -1,71 +1,30 @@
-// --- File: api/gemini.ts ---
-export const config = {
-  runtime: 'edge',
+// --- File: services/geminiService.ts ---
+export const optimizeImage = async (base64Str: string): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 1024;
+      let { width, height } = img;
+      if (width > MAX_WIDTH) {
+        height = Math.round((height * MAX_WIDTH) / width);
+        width = MAX_WIDTH;
+      }
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.6));
+    };
+  });
 };
 
-export default async function (req: Request) {
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
-  }
-
-  // 1. Lấy Google API Key từ biến môi trường
-  const apiKey = process.env.VITE_GEMINI_API_KEY;
-
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'Thiếu Gemini API Key' }), { status: 500 });
-  }
-
-  try {
-    const { subject, prompt, image } = await req.json();
-
-    // 2. Cấu trúc lại dữ liệu gửi sang Google Gemini API
-    const contents = [
-      {
-        parts: [
-          { text: `Bạn là giáo viên chuyên nghiệp. Trả về JSON chính xác cấu trúc này: { "speed": { "answer": "đáp án", "similar": { "question": "câu hỏi", "options": ["A", "B", "C", "D"], "correctIndex": 0 } }, "socratic_hint": "gợi ý", "core_concept": "khái niệm" }. Môn ${subject}: ${prompt}` },
-          // Nếu có ảnh (Base64), thêm vào để Gemini quét
-          ...(image ? [{
-            inlineData: {
-              mimeType: "image/jpeg",
-              data: image.includes(",") ? image.split(",")[1] : image
-            }
-          }] : [])
-        ]
-      }
-    ];
-
-    // 3. Gọi API của Google Gemini
- const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });                     
- {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        contents,
-        generationConfig: {
-          responseMimeType: "application/json",
-          temperature: 0.1
-        }
-      })
-    });
-
-    const data = await response.json();
-
-    // 4. Lấy nội dung text từ phản hồi của Gemini
-    if (!data.candidates || !data.candidates[0]) {
-       return new Response(JSON.stringify({ error: 'Không nhận được phản hồi từ AI' }), { status: 500 });
-    }
-
-    const content = data.candidates[0].content.parts[0].text;
-    
-    return new Response(content, {
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-  } catch (err) {
-    console.error("Lỗi Server:", err);
-    return new Response(JSON.stringify({ error: 'Lỗi máy chủ khi xử lý Gemini' }), { status: 500 });
-  }
-
-}
+export const solveProblem = async (subject: string, prompt: string, image?: string) => {
+  const response = await fetch('/api/gemini', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ subject, prompt, image })
+  });
+  if (!response.ok) throw new Error('Không thể kết nối API');
+  return response.json();
+};

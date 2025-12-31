@@ -1,8 +1,0 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Thêm font chữ cho đẹp đúng style bạn chọn */
-body {
-  @apply bg-[#f8fafc] text-slate-900;
-}

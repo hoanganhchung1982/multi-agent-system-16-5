@@ -1,0 +1,9 @@
+
+{
+  "name": "SM-AS-165-3112",
+  "description": "Hệ sinh thái học tập cộng sinh thông minh, tích hợp AI Gemini để giải quyết bài tập đa phương thức.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

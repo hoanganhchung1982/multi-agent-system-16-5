@@ -1,49 +1,46 @@
-import { GoogleGenAI, Type } from "@google/genai";
-import { Subject } from "../types";
+export const config = {
+  runtime: 'edge', // Tối ưu tốc độ phản hồi cực nhanh
+};
 
-// CẤU HÌNH CỐT LÕI
-const API_KEY = "AIzaSyC6OnjD_SVhrSkbyEddwKe25KgedEaQsmU";
-const genAI = new GoogleGenAI(API_KEY);
+export default async function (req: Request) {
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+  }
 
-export interface SolveResult {
-  finalAnswer: string;
-  casioSteps: string;
-  detailedSolution: string;
-}
+  // SỬA LỖI: Xóa dấu = thừa tại đây
+  const apiKey = process.env.VITE_GEMINI_API_KEY; 
 
-export const processTask = async (subject: Subject, input: string, image?: string): Promise<SolveResult | null> => {
-  const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash",
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: 0.1,
-    }
-  });
-
-  const prompt = `
-    Bạn là một hệ thống AI kép cho môn ${subject}.
-    NHIỆM VỤ: Phân tích đề bài và trả về JSON với cấu trúc chính xác sau:
-    {
-      "finalAnswer": "Chỉ đưa ra đáp án cuối cùng (ví dụ: Đáp án A. $x=2$). Dùng LaTeX.",
-      "casioSteps": "Hướng dẫn bấm máy Casio 580VNX ngắn gọn: [PHÍM] -> [PHÍM]. Xuống dòng bằng \\n",
-      "detailedSolution": "Lời giải chi tiết theo phong cách giáo sư Socratic, logic, khoa học, dùng LaTeX."
-    }
-    YÊU CẦU: Không dùng văn nói, không lời dẫn. Đề bài: ${input}
-  `;
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: 'Server thiếu API Key' }), { status: 500 });
+  }
 
   try {
-    const parts: any[] = [{ text: prompt }];
-    if (image) {
-      parts.push({
-        inlineData: { mimeType: "image/jpeg", data: image.split(",")[1] }
-      });
-    }
+    const { subject, prompt, image } = await req.json();
 
-    const result = await model.generateContent(parts);
-    const responseText = result.response.text();
-    return JSON.parse(responseText) as SolveResult;
-  } catch (error) {
-    console.error("Lỗi AI:", error);
-    return null;
+    const contents = [{
+      parts: [
+        { text: `Giải môn ${subject} và trả về JSON { "quick": {...}, "detail": "..." }: ${prompt}` },
+        ...(image ? [{ inlineData: { mimeType: "image/jpeg", data: image.split(",")[1] } }] : [])
+      ]
+    }];
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents,
+        generationConfig: { responseMimeType: "application/json" }
+      })
+    });
+
+    const data = await response.json();
+    const content = data.candidates[0].content.parts[0].text;
+
+    return new Response(content, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Lỗi server' }), { status: 500 });
   }
-};
+}

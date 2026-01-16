@@ -18,7 +18,7 @@ const audioCache = new Map<string, string>();
 const getCacheKey = (subject: string, agent: string, input: string, imageHash: string = '') => 
   `${subject}|${agent}|${input.trim()}|${imageHash}`;
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY=});
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY});
 
 const SYSTEM_PROMPTS: Record<AgentType, string> = {
   [AgentType.SPEED]: `Bạn là chuyên gia giải đề thi.

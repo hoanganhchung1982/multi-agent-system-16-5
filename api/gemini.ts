@@ -9,7 +9,7 @@ export default async function (req: Request) {
   }
 
   // 1. Lấy Google API Key từ biến môi trường
-  const apiKey = process.env.VITE_GEMINI_API_KEY="AIzaSyC6OnjD_SVhrSkbyEddwKe25KgedEaQsmU";
+  const apiKey = process.env.VITE_GEMINI_API_KEY=;
 
   if (!apiKey) {
     return new Response(JSON.stringify({ error: 'Thiếu Gemini API Key' }), { status: 500 });
@@ -66,4 +66,5 @@ export default async function (req: Request) {
     console.error("Lỗi Server:", err);
     return new Response(JSON.stringify({ error: 'Lỗi máy chủ khi xử lý Gemini' }), { status: 500 });
   }
+
 }

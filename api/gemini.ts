@@ -1,41 +1,29 @@
+// --- File: api/gemini.ts ---
 export const config = {
-  runtime: 'edge', // Tối ưu tốc độ phản hồi cho Edge Network
+  runtime: 'edge',
 };
 
 export default async function (req: Request) {
-  // Chỉ chấp nhận POST
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
   }
 
-  // 1. SỬA LỖI QUAN TRỌNG NHẤT: Xóa dấu = thừa
-  const apiKey = process.env.VITE_GEMINI_API_KEY; 
+  // 1. Lấy Google API Key từ biến môi trường
+  const apiKey = process.env.VITE_GEMINI_API_KEY="AIzaSyC6OnjD_SVhrSkbyEddwKe25KgedEaQsmU";
 
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'Server thiếu Gemini API Key' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Thiếu Gemini API Key' }), { status: 500 });
   }
 
   try {
     const { subject, prompt, image } = await req.json();
 
-    // 2. Cấu trúc lại Prompt để ép AI trả về 2 kết quả (Nhanh & Chi tiết)
-    const systemInstruction = `
-      Bạn là chuyên gia giáo dục môn ${subject}. 
-      Giải bài toán và trả về DUY NHẤT một đối tượng JSON có cấu trúc:
-      {
-        "quick": {
-          "finalAnswer": "Đáp án cuối (Dùng LaTeX)",
-          "casioSteps": "Hướng dẫn bấm máy Casio 580VNX (Dùng \\n để xuống dòng)"
-        },
-        "detail": "Lời giải chi tiết từng bước, logic, dùng LaTeX"
-      }
-      TUYỆT ĐỐI không có lời dẫn, không dùng văn nói.
-    `;
-
+    // 2. Cấu trúc lại dữ liệu gửi sang Google Gemini API
     const contents = [
       {
         parts: [
-          { text: `${systemInstruction}\n\nĐề bài: ${prompt}` },
+          { text: `Bạn là giáo viên chuyên nghiệp. Trả về JSON chính xác cấu trúc này: { "speed": { "answer": "đáp án", "similar": { "question": "câu hỏi", "options": ["A", "B", "C", "D"], "correctIndex": 0 } }, "socratic_hint": "gợi ý", "core_concept": "khái niệm" }. Môn ${subject}: ${prompt}` },
+          // Nếu có ảnh (Base64), thêm vào để Gemini quét
           ...(image ? [{
             inlineData: {
               mimeType: "image/jpeg",
@@ -46,24 +34,26 @@ export default async function (req: Request) {
       }
     ];
 
-    // 3. Gọi API Google (Bản 1.5-Flash để đạt tốc độ 1s)
+    // 3. Gọi API của Google Gemini
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         contents,
         generationConfig: {
           responseMimeType: "application/json",
-          temperature: 0.1 // Độ chính xác cao
+          temperature: 0.1
         }
       })
     });
 
     const data = await response.json();
 
-    // 4. Trả kết quả về cho Frontend
+    // 4. Lấy nội dung text từ phản hồi của Gemini
     if (!data.candidates || !data.candidates[0]) {
-       return new Response(JSON.stringify({ error: 'AI không phản hồi' }), { status: 500 });
+       return new Response(JSON.stringify({ error: 'Không nhận được phản hồi từ AI' }), { status: 500 });
     }
 
     const content = data.candidates[0].content.parts[0].text;
